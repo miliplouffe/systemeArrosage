@@ -1,5 +1,4 @@
 
-Michel Plouffe
 Install
 pip install mcp23017
 sudo apt-get install git-core
