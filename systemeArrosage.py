@@ -463,7 +463,7 @@ gicleurs=initialiaseGicleurs()
 
 confGeneral = redisInOut.recupereSystemeArrosageConfigurationGenerale()
 gicleurs=redisInOut.recupereArrosageConfigurationGicleurs()
-rpiMethodes.initialiseRelaisGicleur(gicleurs)  # initialise gicleur sur le raspberry pi
+# rpiMethodes.initialiseRelaisGicleur(gicleurs)  # initialise gicleur sur le raspberry pi
 
 # redisInOut.StartSystemeArrosageRequete()
 
