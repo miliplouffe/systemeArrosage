@@ -185,7 +185,18 @@ def sauvegardeMessageActivites(DateMessage,NoZone,Message):
 #         except EOFError:
 #             pass
 #     # SendRapportActivitesArrosage(SendRec["RapportActivitesArrosage"].Ip, SendRec["RapportActivitesArrosage"].Port, activites)
-    
+ 
+def valideDate():
+    dateValide=False
+    if DateHeureCourante.day  % 2 == 0 and confGeneral.ArrosageJourPairImpair=="Pair":
+        dateValide=True
+    else:
+        if DateHeureCourante.day  % 2 != 0 and confGeneral.ArrosageJourPairImpair=="Impair":
+            dateValide=True
+        else:
+            dateValide=False
+    return dateValide
+       
     
 def arrosageValide():
     global ValeurPluie
@@ -194,25 +205,26 @@ def arrosageValide():
     global ArrosageDemarre
 
     valide=False
-    jourValide=False
+    dateValide=False
     dateHeureValide=False
     DateHeureCourante=datetime.now()
     pluieValide=False
 
-    if DateHeureCourante.day  % 2 == 0 and confGeneral.ArrosageJourPairImpair=="Pair":
-        jourValide=True
-    else:
-        if DateHeureCourante.day  % 2 != 0 and confGeneral.ArrosageJourPairImpair=="Impair":
-            jourValide=True
-            #sauvegardeMessageLogs("Systeme arrosage Montreal heure et jour impair pair : " + str(jourValide))
-        else:
-            jourValide=False
+    dateValide = valideDate()
+    # if DateHeureCourante.day  % 2 == 0 and confGeneral.ArrosageJourPairImpair=="Pair":
+    #     dateValide=True
+    # else:
+    #     if DateHeureCourante.day  % 2 != 0 and confGeneral.ArrosageJourPairImpair=="Impair":
+    #         dateValide=True
+    #         #sauvegardeMessageLogs("Systeme arrosage Montreal heure et jour impair pair : " + str(dateValide))
+    #     else:
+    #         dateValide=False
 
     if confGeneral.SystemArrosageActif==True:
         if confGeneral.SondePluieActive==False:
             pluieValide=True
 
-        if pluieValide==True and confGeneral.HeureDebutArrosage==DateHeureCourante.hour and jourValide==True and (datetime.now() - DateHeureDebutIntervalle).days >= confGeneral.NombreJourInterval:
+        if pluieValide==True and confGeneral.HeureDebutArrosage==DateHeureCourante.hour and dateValide==True and (datetime.now() - DateHeureDebutIntervalle).days >= confGeneral.NombreJourInterval:
            valide=True
         else:
             valide=False
@@ -463,7 +475,7 @@ gicleurs=initialiaseGicleurs()
 
 confGeneral = redisInOut.recupereSystemeArrosageConfigurationGenerale()
 gicleurs=redisInOut.recupereArrosageConfigurationGicleurs()
-# rpiMethodes.initialiseRelaisGicleur(gicleurs)  # initialise gicleur sur le raspberry pi
+rpiMethodes.initialiseRelaisGicleur(gicleurs)  # initialise gicleur sur le raspberry pi
 
 # redisInOut.StartSystemeArrosageRequete()
 
@@ -543,13 +555,30 @@ if __name__ == '__main__':
                     dataRec.ArrosageTermine=False 
                     dataRec.ArrosageEnCour=False
                     donneesArrosage[rec]=dataRec
-                sauvegardeMessageActivites(datetime.now(),1-4, "Reset des gicleurs" )
+                sauvegardeMessageActivites(datetime.now(),"Zones 1,2,3,4", "Reset des gicleurs à 6:00 matin" )
                 sleep(1)
                 # sauvegardeMessageLogs("Systeme arrosage Montreal :" + " gicleurs reset 6 heures")
                 DateHeureDebutIntervalle=datetime.now() + timedelta(days=-1)
                 reset6Heures=True
                 #sleep(3)
             # print (" ip a envoyer  ", SendRec["ArrosageEcranDataEquipement"].Ip)
+            
+            # s assurer que les gicleurs sont tous fermés à 23;00
+            if valideDate()==True and datetime.now().hour==23:
+                sauvegardeMessageActivites(datetime.now(),"Zones 1,2,3,4", "Assure qu à 23 heures jour valide tous sont fermés" )
+                rpiMethodes.set_relais(1, False)
+                rpiMethodes.set_relais(2, False)
+                rpiMethodes.set_relais(3, False)
+                rpiMethodes.set_relais(4, False)
+                
+                for rec in donneesArrosage:
+                    dataRec=dc.ARROSAGE_DATA()
+                    dataRec=donneesArrosage[rec]
+                    dataRec.ArrosageTermine=True 
+                    dataRec.ArrosageEnCour=False
+                    donneesArrosage[rec]=dataRec
+                
+                
             
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()

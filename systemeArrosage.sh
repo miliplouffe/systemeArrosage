@@ -2,4 +2,4 @@
 # This is my first script! This is a comment.
 
 cd /home/pi/python
-sudo python systemeArrosage.py
+sudo python systemeArrosage.py &
