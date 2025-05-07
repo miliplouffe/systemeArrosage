@@ -45,6 +45,7 @@ DateHeureDebutArrosage = datetime
 DateHeureDebutIntervalle = datetime
 Message=""
 reset6Heures = False
+reset23Heures = False
 
 class const:
     format = "02-01-2006 15:04:05"
@@ -560,11 +561,13 @@ if __name__ == '__main__':
                 # sauvegardeMessageLogs("Systeme arrosage Montreal :" + " gicleurs reset 6 heures")
                 DateHeureDebutIntervalle=datetime.now() + timedelta(days=-1)
                 reset6Heures=True
+                reset23Heures=True
+                
                 #sleep(3)
             # print (" ip a envoyer  ", SendRec["ArrosageEcranDataEquipement"].Ip)
             
             # s assurer que les gicleurs sont tous fermés à 23;00
-            if valideDate()==True and datetime.now().hour==23:
+            if valideDate()==True and datetime.now().hour==23 and reset23Heures == True:
                 sauvegardeMessageActivites(datetime.now(),"Zones 1,2,3,4", "Assure qu à 23 heures jour valide tous sont fermés" )
                 rpiMethodes.set_relais(1, False)
                 rpiMethodes.set_relais(2, False)
@@ -577,6 +580,8 @@ if __name__ == '__main__':
                     dataRec.ArrosageTermine=True 
                     dataRec.ArrosageEnCour=False
                     donneesArrosage[rec]=dataRec
+                    
+                reset23Heures=False  # s'assurer que le reset à 23 heures se fasse une seule fois
                 
                 
             
